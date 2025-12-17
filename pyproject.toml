@@ -1,0 +1,11 @@
+[project]
+name = "hackerton"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "openai>=1.0.0",
+    "langchain>=0.2.0",
+    "langchain-openai>=0.1.0",
+]
