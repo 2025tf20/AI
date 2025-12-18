@@ -119,7 +119,7 @@ class Summary:
             if temperature is not None and temperature != self.default_temperature
             else self._client
         )
-        response = client.invoke(messages).model_dump()
+        response = client.invoke(messages).model_dump()["clauses"]
         return response
 
 
