@@ -38,7 +38,6 @@ class Summary:
         return ChatOpenAI(
             model=self.model,
             api_key=self.api_key,
-            temperature=temperature,
         )
 
     def _load_api_key(
@@ -102,7 +101,7 @@ class Summary:
             else self._client
         )
         response = client.invoke(messages)
-        pprint(response)
+        #pprint(response)
         return response.content.strip()
 
 
@@ -111,8 +110,8 @@ if __name__ == "__main__":
 
     ans = sum.ask(
         """
-임대차 계약서에 들어가 특약사항으로 추가할 수 있도록
-임대한 방에서 토끼를 기르고 싶은에 이를 특약에 추가해줘
+        1. 고슴도치를 48마리 키움
+        2. 중간에 재임대 할 수도 있음
         """
     )
 
