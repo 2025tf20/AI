@@ -20,19 +20,15 @@ except ImportError as exc:
 
 class Clause(BaseModel):
     """Contact information for a person."""
-    demand: str = Field(description="권장 문구")
+    demand: str = Field(description="요구 사항")
     recommended_phrasing: list[str] = Field(description="권장 문구들")
     description: str = Field(description="설명")
-    caution: str = Field(description="주의사항")
+    caution: list[str] = Field(description="주의사항들")
 
 class ContactInfo(BaseModel):
     clauses: list[Clause] = Field(
         default_factory=list,  # 비워도 되게 하려면 default_factory, 필수라면 Field(...)
         description="각 요구사항에 대한 추천 특약 조항과 주의사항, 설명",
-    )
-    question: list[str] = Field(
-         default_factory=list,  # 비워도 되게 하려면 default_factory, 필수라면 Field(...)
-        description="추가 확인 및 선택 사항",
     )
 
 class Summary:
@@ -123,16 +119,7 @@ class Summary:
             if temperature is not None and temperature != self.default_temperature
             else self._client
         )
-        response = client.invoke(messages).model_dump()
-        pprint(response)
-
-        for k, v in response.items():
-            print(f"=================={k}==============")
-            for key, val in v:
-                print(key)
-                print(val)
-                print()
-        print(response)
+        response = client.invoke(messages).model_dump()["clauses"]
         return response
 
 
