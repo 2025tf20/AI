@@ -20,11 +20,8 @@ except ImportError as exc:
 
 class Output(BaseModel):
     score: int = Field(..., description="The favorability score for the tenant (1-100).")
-    reasoning: list[str] = Field(default_factory=list, description="Detailed reasoning for the score.")
-    improvement_suggestions: list[str] = Field(
-        default_factory=list, 
-        description="Suggestions for improving the lease terms for the tenant."
-    )
+    positive: list[str] = Field(default_factory=list, description="특약 평가에 대한 긍정적인 측면")
+    negative: list[str] = Field(default_factory=list, description="특약 평가에 대한 부정적인 측면")
 
 class Summary:
     """
@@ -121,10 +118,7 @@ if __name__ == "__main__":
 
     ans = sum.ask(
         """
-        임차인은 자전거 1대(자전거 등록증 또는 구매영수증 제출 가능)를 임대인의 서면 승인 하에 실내에 보관할 수 있다.
-        1. 보관 위치는 현관 내 지정 구역 또는 임대인과 합의한 별도 장소로 하며, 입주 전 해당 위치를 서면으로 확정한다.
-        2. 임차 인은 바닥보호패드 및 자전거 고정장치 등으로 시설 손상을 방지하고, 손상 발생 시 즉시 수리·배상한다.
-        3. 자전거 보관으로 인한 악취·오염·통행 방해 등 인접 세대의 정당한 민원이 접수될 경우 임차인은 즉시 시정조치를 취하고 시정 불이행 시 임대인은 보관 금지를 요청할 수 있다.
+        계약 기간 만료 전 퇴거 시 임차인이 새로운 임대차 계약을 위한 중개보수 부담.
         """
     )
 
