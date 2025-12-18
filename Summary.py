@@ -133,6 +133,15 @@ class Summary:
 
         response = ask_chain.invoke({"scenarios": question}).model_dump()["clauses"]
 
+        for c in response:
+            for k, v in c.items():
+                print(f"======================= {k} ==============================")
+                if isinstance(v, list):
+                    for idx, d in enumerate(v):
+                        print(f"{idx}. {d}")
+                else:
+                    print(v)
+                print()
         return response
 
 
@@ -142,6 +151,6 @@ if __name__ == "__main__":
 
     ans = sum.ask(
         """
-1. 집주인·중개인·수리기사 방문 ‘긴급상황 제외 24시간 전 문자 통보 + 세입자 동의 후 출입 + 부재중 출입 시 전후 사진 공유’ 규칙
+1. 강아지 한 마리
         """
     )
