@@ -4,10 +4,10 @@ import os
 from pathlib import Path
 from typing import Optional, List
 from pprint import pprint
-from pydantic import BaseModel, Field
-from langchain_core.prompts import PromptTemplate
+from pydantic import BaseModel, Field, field_validator
+from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
 
-from config import API_KEY_ENV_VAR, MODEL, SYSTEM_PROMPT, TEMPLATE
+from config import API_KEY_ENV_VAR, MODEL, SYSTEM_PROMPT, TEMPLATE, TEMPLATE3
 
 try:
     from langchain_core.messages import HumanMessage, SystemMessage
@@ -21,9 +21,26 @@ except ImportError as exc:
 class Clause(BaseModel):
     """Contact information for a person."""
     demand: str = Field(description="요구 사항")
-    recommended_phrasing: list[str] = Field(description="권장 문구들")
+    recommended_phrasing: list[str] = Field(
+        default_factory=list, description="권장 문구들"
+    )
     description: str = Field(description="설명")
-    caution: list[str] = Field(description="주의사항들")
+    caution: list[str] = Field(default_factory=list, description="주의사항들")
+
+    @field_validator("recommended_phrasing", mode="before")
+    @classmethod
+    def _normalize_phrasing(cls, v):
+        """Strip leading bullet markers like '- ' and ensure list[str]."""
+        if v is None:
+            return []
+        items = v if isinstance(v, list) else [v]
+        cleaned = []
+        for item in items:
+            text = str(item).strip()
+            if text.startswith("- "):
+                text = text[2:].lstrip()
+            cleaned.append(text)
+        return cleaned
 
 class ContactInfo(BaseModel):
     clauses: list[Clause] = Field(
@@ -47,8 +64,10 @@ class Summary:
         self.api_key = api_key or self._load_api_key(dotenv_path)
         self.default_temperature = default_temperature
         self._client = self._build_client(self.default_temperature)
-        self.prompt = PromptTemplate.from_template(TEMPLATE)
-        self.ask_chain = self.prompt | self._client
+        self.chat_prompt = ChatPromptTemplate.from_messages([
+            ("system", SYSTEM_PROMPT),
+            ("user", TEMPLATE3),           # 사용자 입력을 문자열로 그대로 전달
+        ])
 
     def _build_client(self, temperature: float) -> ChatOpenAI:
         llm = ChatOpenAI(
@@ -103,23 +122,17 @@ class Summary:
         if not question or not question.strip():
             raise ValueError("Question must not be empty.")
 
-        system_prompt = prompt or SYSTEM_PROMPT
-        messages = [SystemMessage(content=system_prompt)]
-
-        if context:
-            messages.append(
-                HumanMessage(content=f"Additional context:\n{context.strip()}")
-            )
-
-        messages.append(HumanMessage(content=question.strip()))
-
         # Reuse the default client unless a call-specific temperature is provided.
         client = (
             self._build_client(temperature)
             if temperature is not None and temperature != self.default_temperature
             else self._client
         )
-        response = client.invoke(messages).model_dump()["clauses"]
+
+        ask_chain = self.chat_prompt | client
+
+        response = ask_chain.invoke({"scenarios": question}).model_dump()["clauses"]
+
         return response
 
 
@@ -129,8 +142,6 @@ if __name__ == "__main__":
 
     ans = sum.ask(
         """
-1. 실내 흡연이 가능했으면 좋겠어
-2. 고양이 키우기
-3. 주차 자리
+1. 집주인·중개인·수리기사 방문 ‘긴급상황 제외 24시간 전 문자 통보 + 세입자 동의 후 출입 + 부재중 출입 시 전후 사진 공유’ 규칙
         """
     )
